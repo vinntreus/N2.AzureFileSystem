@@ -11,6 +11,8 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
     <releaseNotes>
+       1.0.0.1
+        * Do not automatically replace mapped filesystem
        1.0.0.0
        * upload files to blob storage
        * delete files from blob storage
