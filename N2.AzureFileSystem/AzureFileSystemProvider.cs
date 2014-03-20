@@ -11,7 +11,7 @@ using N2.Engine;
 
 namespace N2.AzureFileSystem
 {
-    [Service(typeof(IFileSystem), Replaces = typeof(MappedFileSystem))]
+    [Service(typeof(IFileSystem))]
     public class AzureFileSystemProvider : IFileSystem
     {
         private const string DIRECTORY_PLACE_HOLDER = "dir";
