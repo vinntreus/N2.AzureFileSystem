@@ -5,9 +5,9 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("N2.AzureFileSystem")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Azure blob storage provider for N2CMS. Check project url for usage instructions.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Daniel Vinntreus")]
 [assembly: AssemblyProduct("N2.AzureFileSystem")]
 [assembly: AssemblyCopyright("Copyright © Daniel Vinntreus 2014")]
 [assembly: AssemblyTrademark("")]
