@@ -11,11 +11,11 @@ using N2.Engine;
 
 namespace N2.AzureFileSystem
 {
-    [Service(typeof(IFileSystem))]
+    [Service(typeof(IFileSystem), Replaces = typeof(MappedFileSystem))]
     public class AzureFileSystemProvider : IFileSystem
     {
         private const string DIRECTORY_PLACE_HOLDER = "dir";
-        
+
         private static readonly string CONTAINER_NAME = ContainerNameParser.Create();
         private static readonly string CONNECTION_STRING = ConfigurationManager.ConnectionStrings[AppSettingsKeys.N2StorageConnectionString].ConnectionString;
 
@@ -44,17 +44,26 @@ namespace N2.AzureFileSystem
         public void MoveDirectory(string fromVirtualPath, string destinationVirtualPath)
         {
             throw new NotImplementedException();
+
+            //if (DirectoryMoved != null)
+            //    DirectoryMoved.Invoke(this, new FileEventArgs(destinationVirtualPath, fromVirtualPath));
         }
 
         public void DeleteDirectory(string virtualPath)
         {
             GetCloudBlobDirectory(virtualPath);
+
+            if (DirectoryDeleted != null)
+                DirectoryDeleted.Invoke(this, new FileEventArgs(virtualPath, null));
         }
 
         public void CreateDirectory(string virtualPath)
         {
             var path = UnEscapedPath(virtualPath);
             Container.GetDirectoryReference(path);
+
+            if (DirectoryCreated != null)
+                DirectoryCreated.Invoke(this, new FileEventArgs(virtualPath, null));
         }
 
         public DirectoryData GetDirectory(string virtualPath)
@@ -87,16 +96,35 @@ namespace N2.AzureFileSystem
 
         public void MoveFile(string fromVirtualPath, string destinationVirtualPath)
         {
-            CopyFile(fromVirtualPath, destinationVirtualPath);
-            DeleteFile(fromVirtualPath);
+            CopyFileInternal(fromVirtualPath, destinationVirtualPath);
+            DeleteFileInternal(fromVirtualPath);
+
+            if (FileMoved != null)
+                FileMoved.Invoke(this, new FileEventArgs(destinationVirtualPath, fromVirtualPath));
         }
 
         public void DeleteFile(string virtualPath)
+        {
+            DeleteFileInternal(virtualPath);
+
+            if (FileDeleted != null)
+                FileDeleted.Invoke(this, new FileEventArgs(virtualPath, null));
+        }
+
+        private void DeleteFileInternal(string virtualPath)
         {
             GetCloudBlockBlobFile(virtualPath).Delete();
         }
 
         public void CopyFile(string fromVirtualPath, string destinationVirtualPath)
+        {
+            CopyFileInternal(fromVirtualPath, destinationVirtualPath);
+
+            if (FileCopied != null)
+                FileCopied.Invoke(this, new FileEventArgs(destinationVirtualPath, fromVirtualPath));
+        }
+
+        private void CopyFileInternal(string fromVirtualPath, string destinationVirtualPath)
         {
             var from = GetCloudBlockBlobFile(fromVirtualPath);
             var destination = GetCloudBlockBlobFile(destinationVirtualPath);
@@ -106,12 +134,20 @@ namespace N2.AzureFileSystem
 
         public Stream OpenFile(string virtualPath, bool readOnly = false)
         {
-            return GetCloudBlockBlobFile(virtualPath).OpenRead();
+            if (FileExists(virtualPath))
+                return GetCloudBlockBlobFile(virtualPath).OpenRead();
+            else if (!readOnly)
+                return GetCloudBlockBlobFile(virtualPath).OpenWrite();
+            else
+                throw new Exception("Not found");
         }
 
         public void WriteFile(string virtualPath, Stream inputStream)
         {
             GetCloudBlockBlobFile(virtualPath).UploadFromStream(inputStream);
+
+            if (FileWritten != null)
+                FileWritten.Invoke(this, new FileEventArgs(virtualPath, null));
         }
 
         public event EventHandler<FileEventArgs> FileWritten;
